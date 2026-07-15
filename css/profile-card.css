@@ -1,0 +1,132 @@
+:host {
+  display: block;
+}
+
+.card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--radius, 8px);
+  overflow: hidden;
+}
+
+header {
+  display: grid;
+  grid-template:
+    "avatar name  badge" auto
+    "avatar title badge" auto
+    / auto 1fr auto;
+  align-items: center;
+  column-gap: var(--space-md, 16px);
+  padding: var(--space-lg, 24px);
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.avatar {
+  grid-area: avatar;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+header h1 {
+  grid-area: name;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+header p {
+  grid-area: title;
+  color: var(--color-text-secondary, #555);
+  font-size: 0.875rem;
+}
+
+.badge {
+  grid-area: badge;
+  align-self: start;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge[data-active="true"] {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge[data-active="true"] [data-badge="false"],
+.badge[data-active="false"] [data-badge="true"] {
+  display: none;
+}
+
+.badge[data-active="false"] {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+dl {
+  padding: var(--space-lg, 24px);
+}
+
+dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #555);
+  margin-top: var(--space-md, 16px);
+}
+
+dt:first-child {
+  margin-top: 0;
+}
+
+dd {
+  margin: var(--space-xs, 4px) 0 0;
+}
+
+dd a {
+  color: var(--color-accent, #2563eb);
+  text-decoration: none;
+}
+
+dd a:hover {
+  text-decoration: underline;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs, 4px);
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 10px;
+  background: var(--color-accent-light, #dbeafe);
+  color: var(--color-accent, #2563eb);
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.skill-list {
+  padding-left: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.skill-list li {
+  font-size: 0.9375rem;
+}
+
+.notice {
+  padding: var(--space-md, 16px) var(--space-lg, 24px);
+  color: var(--color-text-secondary, #555);
+  font-style: italic;
+  font-size: 0.875rem;
+}

@@ -1,0 +1,33 @@
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+@prefix ui:     <#> .
+
+schema:name            rdfs:label "Full Name"@en, "Nom complet"@fr, "Nombre completo"@es .
+schema:jobTitle        rdfs:label "Job Title"@en, "Poste"@fr, "Cargo"@es .
+schema:email           rdfs:label "Email"@en, "Courriel"@fr, "Correo"@es .
+schema:description     rdfs:label "Bio"@en, "Biographie"@fr, "Biografía"@es .
+schema:isActive        rdfs:label "Active Status"@en, "Statut actif"@fr, "Estado activo"@es .
+schema:knowsLanguage   rdfs:label "Languages"@en, "Langages"@fr, "Lenguajes"@es .
+schema:hasSkill        rdfs:label "Skills"@en, "Compétences"@fr, "Habilidades"@es .
+schema:url             rdfs:label "Website"@en, "Site web"@fr, "Sitio web"@es .
+schema:image           rdfs:label "Avatar URL"@en, "URL de l'avatar"@fr, "URL del avatar"@es .
+
+ui:navProfile          rdfs:label "Profile"@en, "Profil"@fr, "Perfil"@es .
+ui:navEdit             rdfs:label "Edit"@en, "Modifier"@fr, "Editar"@es .
+ui:editHeading         rdfs:label "Edit Profile"@en, "Modifier le profil"@fr, "Editar perfil"@es .
+ui:badgeActive         rdfs:label "Active"@en, "Actif"@fr, "Activo"@es .
+ui:badgeInactive       rdfs:label "Inactive"@en, "Inactif"@fr, "Inactivo"@es .
+ui:actionAdd           rdfs:label "Add"@en, "Ajouter"@fr, "Agregar"@es .
+ui:skillsHint          rdfs:label "Skills (drag to reorder)"@en,
+                                  "Compétences (glisser pour réorganiser)"@fr,
+                                  "Habilidades (arrastrar para reordenar)"@es .
+ui:placeholderLang     rdfs:label "New language..."@en, "Nouveau langage..."@fr, "Nuevo lenguaje..."@es .
+ui:placeholderSkill    rdfs:label "New skill..."@en, "Nouvelle compétence..."@fr, "Nueva habilidad..."@es .
+ui:inactiveNotice      rdfs:label "This profile is currently inactive."@en,
+                                  "Ce profil est actuellement inactif."@fr,
+                                  "Este perfil está actualmente inactivo."@es .
+
+schema:address         rdfs:label "Address"@en, "Adresse"@fr, "Dirección"@es .
+schema:streetAddress   rdfs:label "Street"@en, "Rue"@fr, "Calle"@es .
+schema:addressLocality rdfs:label "City"@en, "Ville"@fr, "Ciudad"@es .
+schema:addressCountry  rdfs:label "Country"@en, "Pays"@fr, "País"@es .

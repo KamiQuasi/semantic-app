@@ -1,0 +1,57 @@
+<script type="module" src="/src/components/profile-card.js"></script>
+
+<profile-card>
+  <template shadowrootmode="open">
+    <link rel="stylesheet" href="/css/profile-card.css">
+
+    <article class="card" vocab="https://schema.org/" resource="#me" typeof="Person">
+      <header>
+        <img property="image" alt="Avatar" class="avatar">
+        <h1 property="name" data-transform="capitalize"></h1>
+        <p property="jobTitle"></p>
+        <span property="isActive" class="badge">
+          <span data-badge="true" vocab="#" typeof="badgeActive"></span>
+          <span data-badge="false" vocab="#" typeof="badgeInactive"></span>
+        </span>
+      </header>
+
+      <dl>
+        <div data-if="description">
+          <dt typeof="description"></dt>
+          <dd property="description"></dd>
+        </div>
+
+        <div data-if="isActive:true">
+          <dt typeof="email"></dt>
+          <dd><a property="email" data-attr-aria-disabled="isActive:false"></a></dd>
+
+          <dt typeof="url"></dt>
+          <dd><a property="url" target="_blank" data-attr-aria-disabled="isActive:false"></a></dd>
+        </div>
+
+        <div data-if="address">
+          <dt typeof="address"></dt>
+          <dd property="address" typeof="PostalAddress" resource="#address">
+            <span property="streetAddress"></span>,
+            <span property="addressLocality"></span>,
+            <span property="addressCountry"></span>
+          </dd>
+        </div>
+
+        <dt typeof="knowsLanguage"></dt>
+        <dd property="knowsLanguage" class="chips">
+          <template><span class="chip" data-transform="uppercase"></span></template>
+        </dd>
+
+        <dt typeof="hasSkill"></dt>
+        <dd>
+          <ol property="hasSkill" class="skill-list">
+            <template><li></li></template>
+          </ol>
+        </dd>
+      </dl>
+
+      <p data-if="isActive:false" class="notice" vocab="#" typeof="inactiveNotice"></p>
+    </article>
+  </template>
+</profile-card>
