@@ -4,7 +4,6 @@ import { renderPage, renderPeoplePage } from './server/template.ts';
 import { ServerSSETransport } from './server/transport.ts';
 import {
   initStore,
-  parseTurtle,
   getProfileByIRI,
   listPeople,
   toState,
@@ -17,11 +16,10 @@ import {
   type ProfilePerson,
 } from './server/rdf.ts';
 
-const PROFILES_DIR = 'rdf/profiles';
-const UI_PATH = 'rdf/ui.ttl';
-
-const dataset = await initStore();
+const kv = await Deno.openKv();
+const dataset = await initStore(kv);
 let labels: Labels = loadLabels(dataset);
+const channel = new BroadcastChannel('profile-sync');
 
 function personIRI(id: string): string {
   return `http://localhost:8000/people/${id}#me`;
@@ -47,23 +45,11 @@ function syncPeopleStore() {
   });
 }
 
-/** Convert a Labels map to a JSON-serializable object for SSE broadcast. */
-function serializeLabels(l: Labels): string {
-  const obj: Record<string, Record<string, string>> = {};
-  for (const [subject, langMap] of l) {
-    const langs: Record<string, string> = {};
-    for (const [lang, text] of langMap) langs[lang] = text;
-    obj[subject] = langs;
-  }
-  return JSON.stringify(obj);
-}
-
 interface ProfileSession {
   person: ProfilePerson;
   transport: ServerSSETransport;
   store: CPXStoreCore;
-  lastSelfWrite: number;
-  fileReloading: boolean;
+  externalUpdate: boolean;
 }
 
 const sessions = new Map<string, ProfileSession>();
@@ -80,17 +66,17 @@ function getSession(id: string): ProfileSession {
     collabPlugin({ transport }),
   );
 
-  session = { person, transport, store, lastSelfWrite: 0, fileReloading: false };
+  session = { person, transport, store, externalUpdate: false };
 
   store.onChange((changes) => {
-    if (session!.fileReloading) return;
+    if (session!.externalUpdate) return;
     for (const [prop, { val }] of changes) {
       updateFromState(person, prop, val);
     }
-    session!.lastSelfWrite = Date.now();
-    serializeProfile(dataset, id).then(
-      (turtle) => Deno.writeTextFile(`${PROFILES_DIR}/${id}.ttl`, turtle),
-    );
+    serializeProfile(dataset, id).then((turtle) => {
+      kv.set(['profiles', id], turtle);
+      channel.postMessage({ type: 'profile-ops', id, turtle });
+    });
     for (const [prop] of changes) {
       if (PEOPLE_SUMMARY_PROPS.has(prop)) {
         syncPeopleStore();
@@ -103,80 +89,40 @@ function getSession(id: string): ProfileSession {
   return session;
 }
 
-let labelsDebounce: number | undefined;
-const profileDebounces = new Map<string, number>();
+channel.onmessage = async (event: MessageEvent) => {
+  const { type, id, turtle } = event.data;
+  if (type !== 'profile-ops') return;
 
-(async () => {
-  const watcher = Deno.watchFs([PROFILES_DIR, 'rdf']);
-  for await (const event of watcher) {
-    if (event.kind !== 'modify' && event.kind !== 'create' && event.kind !== 'rename') continue;
+  await reloadProfile(dataset, id, turtle);
+  const session = sessions.get(id);
+  if (!session) return;
 
-    if (event.paths.some((p) => p.endsWith('ui.ttl'))) {
-      clearTimeout(labelsDebounce);
-      labelsDebounce = setTimeout(async () => {
-        try {
-          const newUiDataset = await parseTurtle(await Deno.readTextFile(UI_PATH));
-          labels = loadLabels(newUiDataset);
-          for (const session of sessions.values()) {
-            session.transport.broadcastEvent('labels', serializeLabels(labels));
-          }
-          peopleTransport.broadcastEvent('labels', serializeLabels(labels));
-          console.log('Labels reloaded and broadcast from', UI_PATH);
-        } catch (e) {
-          console.error('Failed to reload labels:', e);
-        }
-      }, 100);
-    }
-
-    for (const p of event.paths) {
-      const match = p.match(/profiles\/([^/]+)\.ttl$/);
-      if (!match) continue;
-      const id = match[1];
-      const session = sessions.get(id);
-      if (session && Date.now() - session.lastSelfWrite < 1000) continue;
-
-      clearTimeout(profileDebounces.get(id));
-      profileDebounces.set(id, setTimeout(async () => {
-        try {
-          await reloadProfile(dataset, id);
-          const session = sessions.get(id);
-          if (!session) return;
-
-          const newPerson = getProfileByIRI(dataset, personIRI(id));
-          const newState = toState(newPerson);
-          const oldState = session.store.toJSON() as Record<string, unknown>;
-          const changed: [string, unknown][] = [];
-          for (const [key, val] of Object.entries(newState)) {
-            if (JSON.stringify(val) !== JSON.stringify(oldState[key])) {
-              changed.push([key, val]);
-            }
-          }
-          if (!changed.length) return;
-
-          session.person = newPerson;
-          session.fileReloading = true;
-          for (const [key, val] of changed) {
-            session.transport.receive({
-              id: crypto.randomUUID(),
-              origin: 'file',
-              timestamp: Date.now(),
-              prop: key,
-              type: 'set',
-              value: val,
-            });
-          }
-          session.fileReloading = false;
-          syncPeopleStore();
-          console.log(`Profile reloaded and broadcast for ${id}`);
-        } catch (e) {
-          const s = sessions.get(id);
-          if (s) s.fileReloading = false;
-          console.error(`Failed to reload profile ${id}:`, e);
-        }
-      }, 100));
+  const newPerson = getProfileByIRI(dataset, personIRI(id));
+  const newState = toState(newPerson);
+  const oldState = session.store.toJSON() as Record<string, unknown>;
+  const changed: [string, unknown][] = [];
+  for (const [key, val] of Object.entries(newState)) {
+    if (JSON.stringify(val) !== JSON.stringify(oldState[key])) {
+      changed.push([key, val]);
     }
   }
-})();
+  if (!changed.length) return;
+
+  session.person = newPerson;
+  session.externalUpdate = true;
+  for (const [key, val] of changed) {
+    session.transport.receive({
+      id: crypto.randomUUID(),
+      origin: 'broadcast',
+      timestamp: Date.now(),
+      prop: key,
+      type: 'set',
+      value: val,
+    });
+  }
+  session.externalUpdate = false;
+  syncPeopleStore();
+};
 
 /** File extension to Content-Type mapping for static file serving. */
 const MIME_TYPES: Record<string, string> = {

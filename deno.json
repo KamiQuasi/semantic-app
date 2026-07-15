@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --allow-net --allow-read --allow-write --allow-env --minimum-dependency-age 0 --watch server.ts",
+    "dev": "deno run --allow-net --allow-read --allow-env --unstable-kv --minimum-dependency-age 0 --watch server.ts",
     "vendor": "deno run --allow-read --allow-write --allow-net --allow-env --minimum-dependency-age 0 vendor.ts"
   },
   "imports": {
@@ -9,7 +9,7 @@
     "@chapeaux/cpx-store/plugins/collab": "jsr:@chapeaux/cpx-store@^0.8.0/plugins/collab",
     "@chapeaux/cpx-store/transports/sse": "jsr:@chapeaux/cpx-store@^0.8.0/transports/sse",
     "@deno/emit": "jsr:@deno/emit@^0.46",
-    "@jeswr/sparq": "/tmp/sparq-pkg/dist/index.js",
+    "@jeswr/sparq": "./vendor/sparq/dist/index.js",
     "@rdfjs/wrapper": "npm:@rdfjs/wrapper",
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom"
   }

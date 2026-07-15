@@ -134,8 +134,8 @@ export async function parseTurtle(text: string): Promise<Dataset> {
   return await Dataset.fromString(text, 'turtle');
 }
 
-/** Load all .ttl files from rdf/profiles/ and rdf/ui.ttl into a single Dataset. */
-export async function initStore(): Promise<Dataset> {
+/** Load all .ttl files into a single Dataset, overlaying any KV-persisted edits. */
+export async function initStore(kv?: Deno.Kv): Promise<Dataset> {
   const dataset = await Dataset.create();
   for await (const entry of Deno.readDir(PROFILES_DIR)) {
     if (!entry.name.endsWith('.ttl')) continue;
@@ -150,6 +150,12 @@ export async function initStore(): Promise<Dataset> {
       for (const q of ds) dataset.add(q);
     } catch {
       // optional file
+    }
+  }
+  if (kv) {
+    for await (const entry of kv.list({ prefix: ['profiles'] })) {
+      const id = entry.key[1] as string;
+      await reloadProfile(dataset, id, entry.value as string);
     }
   }
   return dataset;
@@ -197,15 +203,14 @@ export function listPeople(dataset: Dataset): { id: string; name: string; jobTit
   return people;
 }
 
-/** Reload a profile file into the dataset, replacing all quads for that person's base IRI. */
-export async function reloadProfile(dataset: Dataset, id: string): Promise<void> {
+/** Replace all quads for a profile's base IRI with quads parsed from a Turtle string. */
+export async function reloadProfile(dataset: Dataset, id: string, turtle: string): Promise<void> {
   const baseIRI = `http://localhost:8000/people/${id}`;
   for (const q of [...dataset]) {
     if (q.subject.value.startsWith(baseIRI)) dataset.delete(q);
     if (q.object.value.startsWith(baseIRI)) dataset.delete(q);
   }
-  const text = await Deno.readTextFile(`${PROFILES_DIR}/${id}.ttl`);
-  const ds = await Dataset.fromString(text, 'turtle');
+  const ds = await Dataset.fromString(turtle, 'turtle');
   for (const q of ds) dataset.add(q);
 }
 
@@ -273,11 +278,6 @@ export function updateFromState(person: ProfilePerson, prop: string, value: unkn
       person.address = value as { streetAddress: string; addressLocality: string; addressCountry: string };
       break;
   }
-}
-
-/** Serialize a sparq Dataset to Turtle text with schema.org prefixes. */
-export function serializeTurtle(dataset: Dataset): string {
-  return dataset.store.serialize('turtle');
 }
 
 /** Serialize only the quads belonging to a specific profile (including reachable blank nodes). */
