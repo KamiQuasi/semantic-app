@@ -1,0 +1,73 @@
+:host {
+  display: block;
+}
+
+.people-grid h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--space-lg, 24px);
+}
+
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg, 24px);
+}
+
+.person-card {
+  display: flex;
+  gap: var(--space-md, 16px);
+  padding: var(--space-lg, 24px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--radius, 8px);
+  text-decoration: none;
+  color: var(--color-text, #1a1a1a);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.person-card:hover {
+  border-color: var(--color-accent, #2563eb);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.person-card .avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.person-info h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs, 4px);
+}
+
+.person-info p {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #555);
+}
+
+.person-card .badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  margin-top: var(--space-xs, 4px);
+}
+
+.badge[data-active="true"] [data-badge="true"] {
+  color: var(--color-active, #16a34a);
+}
+
+.badge[data-active="true"] [data-badge="false"] {
+  display: none;
+}
+
+.badge[data-active="false"] [data-badge="true"] {
+  display: none;
+}
+
+.badge[data-active="false"] [data-badge="false"] {
+  color: var(--color-inactive, #9ca3af);
+}

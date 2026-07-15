@@ -19,7 +19,8 @@
 </head>
 <body>
   <header>
-    <nav vocab="#" aria-label="Primary navigation">
+    <nav vocab="urn:ui:" aria-label="Primary navigation">
+      <a href="/people" typeof="navPeople"></a>
       <a href="/profile" typeof="navProfile"></a>
       <a href="/edit" typeof="navEdit"></a>
     </nav>
@@ -34,8 +35,7 @@
   <profile-store></profile-store>
   <script type="module" src="/src/components/profile-store.js"></script>
   <script type="module">
-    import { setLocale, connectLabelStream } from '/src/utils/i18n.js';
-    connectLabelStream('/api/events');
+    import { setLocale } from '/src/utils/i18n.js';
     for (const btn of document.querySelectorAll('.lang-btn')) {
       btn.addEventListener('click', () => {
         document.querySelector('.lang-btn.active')?.classList.remove('active');

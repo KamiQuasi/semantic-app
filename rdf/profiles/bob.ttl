@@ -1,0 +1,40 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://localhost:8000/people/bob#address>
+  a <https://schema.org/PostalAddress> ;
+  <https://schema.org/addressCountry> "FR" ;
+  <https://schema.org/addressLocality> "Paris" ;
+  <https://schema.org/streetAddress> "42 Rue de Rivoli" .
+
+<http://localhost:8000/people/bob#me>
+  a <https://schema.org/Person> ;
+  <https://schema.org/address> <http://localhost:8000/people/bob#address> ;
+  <https://schema.org/description> "Building data pipelines and knowledge graphs for the semantic web." ;
+  <https://schema.org/email> "bob@example.org" ;
+  <https://schema.org/hasSkill> _:f93f5f4be77d784c2fb27eacb9b67242 ;
+  <https://schema.org/image> "https://i.pravatar.cc/200?u=bob" ;
+  <https://schema.org/isActive> "true"^^xsd:boolean ;
+  <https://schema.org/jobTitle> "Principal Data Engineer" ;
+  <https://schema.org/knowsLanguage> "Python",
+    "SPARQL",
+    "SQL" ;
+  <https://schema.org/name> "Barbara Martinez" ;
+  <https://schema.org/url> "https://bob.example.org" ;
+  <https://schema.org/worksFor> <http://localhost:8000/orgs/acme#org> .
+
+_:adc6ea157b51af358d11ef7d5b1f4df5
+  rdf:first "Data Modeling" ;
+  rdf:rest rdf:nil .
+
+_:ceb061e2be0eb12fbcaa1c193bf06183
+  rdf:first "Knowledge Graphs" ;
+  rdf:rest _:adc6ea157b51af358d11ef7d5b1f4df5 .
+
+_:dda57e92229d579d5898fff5dbdf40e6
+  rdf:first "ETL" ;
+  rdf:rest _:ceb061e2be0eb12fbcaa1c193bf06183 .
+
+_:f93f5f4be77d784c2fb27eacb9b67242
+  rdf:first "SPARQL" ;
+  rdf:rest _:dda57e92229d579d5898fff5dbdf40e6 .

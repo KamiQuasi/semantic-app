@@ -9,7 +9,7 @@
     "@chapeaux/cpx-store/plugins/collab": "jsr:@chapeaux/cpx-store@^0.8.0/plugins/collab",
     "@chapeaux/cpx-store/transports/sse": "jsr:@chapeaux/cpx-store@^0.8.0/transports/sse",
     "@deno/emit": "jsr:@deno/emit@^0.46",
-    "n3": "npm:n3",
+    "@jeswr/sparq": "/tmp/sparq-pkg/dist/index.js",
     "@rdfjs/wrapper": "npm:@rdfjs/wrapper",
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom"
   }

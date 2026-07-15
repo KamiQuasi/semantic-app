@@ -1,0 +1,45 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://localhost:8000/people/ada#address>
+  a <https://schema.org/PostalAddress> ;
+  <https://schema.org/addressCountry> "UK" ;
+  <https://schema.org/addressLocality> "London" ;
+  <https://schema.org/streetAddress> "10 St James's Square" .
+
+<http://localhost:8000/people/ada#me>
+  a <https://schema.org/Person> ;
+  <https://schema.org/address> <http://localhost:8000/people/ada#address> ;
+  <https://schema.org/description> "Passionate about algorithms, analytical engines, and the poetical science of computing." ;
+  <https://schema.org/email> "ada@example.org" ;
+  <https://schema.org/hasSkill> _:c3ca753beb9e0ec5bc7cc5e492141881 ;
+  <https://schema.org/image> "https://i.pravatar.cc/200?u=ada" ;
+  <https://schema.org/isActive> "true"^^xsd:boolean ;
+  <https://schema.org/jobTitle> "Senior Software Engineer" ;
+  <https://schema.org/knowsLanguage> "Deno",
+    "Python",
+    "Rust",
+    "TypeScript" ;
+  <https://schema.org/name> "Ada Lovelace" ;
+  <https://schema.org/url> "https://ada.example.org" ;
+  <https://schema.org/worksFor> <http://localhost:8000/orgs/acme#org> .
+
+_:a3003394b16cb04b972868b9fbf13df
+  rdf:first "Graph Databases" ;
+  rdf:rest _:e6d0ad28364bcfd6f6af87af80c0f7e2 .
+
+_:c0a0d5322da37e3e92056473535a5cf8
+  rdf:first "Web Components" ;
+  rdf:rest _:a3003394b16cb04b972868b9fbf13df .
+
+_:c3ca753beb9e0ec5bc7cc5e492141881
+  rdf:first "Deno" ;
+  rdf:rest _:ffadea70cb2e04746ad6fadefaff92d9 .
+
+_:e6d0ad28364bcfd6f6af87af80c0f7e2
+  rdf:first "RDF" ;
+  rdf:rest rdf:nil .
+
+_:ffadea70cb2e04746ad6fadefaff92d9
+  rdf:first "SSE" ;
+  rdf:rest _:c0a0d5322da37e3e92056473535a5cf8 .

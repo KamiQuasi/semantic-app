@@ -1,8 +1,11 @@
 import { CPXStore } from '@chapeaux/cpx-store';
 import { collabPlugin } from '@chapeaux/cpx-store/plugins/collab';
 import { SSETransport } from '@chapeaux/cpx-store/transports/sse';
+import { updateLabels } from '/src/utils/i18n.js';
 
-const transport = new SSETransport('/api/events', { apiUrl: '/api/profile' });
+const segments = window.location.pathname.split('/');
+const profileId = segments[2] || segments[1];
+const transport = new SSETransport(`/api/events/${profileId}`, { apiUrl: `/api/profile/${profileId}` });
 
 /** @type {Function} Resolves the singleton store promise. */
 let _resolve;
@@ -38,6 +41,11 @@ class ProfileStore extends CPXStore {
     if (el) {
       this.sync(JSON.parse(el.textContent));
       el.remove();
+    }
+    if (transport._eventSource) {
+      transport._eventSource.addEventListener('labels', (e) => {
+        updateLabels(JSON.parse(e.data));
+      });
     }
     _resolve(this);
   }

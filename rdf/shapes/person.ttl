@@ -1,0 +1,67 @@
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+<urn:shapes:PersonShape> a sh:NodeShape ;
+    sh:targetClass schema:Person ;
+
+    sh:property [
+        sh:path schema:name ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:name "name" ;
+        sh:message "Name is required and must be a non-empty string." ;
+    ] ;
+
+    sh:property [
+        sh:path schema:email ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 3 ;
+        sh:name "email" ;
+        sh:message "A valid email address is required." ;
+    ] ;
+
+    sh:property [
+        sh:path schema:jobTitle ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:name "jobTitle" ;
+        sh:message "Job title must be a string." ;
+    ] ;
+
+    sh:property [
+        sh:path schema:description ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:name "description" ;
+        sh:message "Bio must be a string." ;
+    ] ;
+
+    sh:property [
+        sh:path schema:url ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:name "url" ;
+        sh:message "Website URL must be a string." ;
+    ] ;
+
+    sh:property [
+        sh:path schema:image ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:name "image" ;
+        sh:message "Image URL must be a string." ;
+    ] ;
+
+    sh:property [
+        sh:path schema:isActive ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean ;
+        sh:name "isActive" ;
+        sh:message "Active status is required and must be a boolean." ;
+    ] .

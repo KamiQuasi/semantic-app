@@ -1,0 +1,28 @@
+<script type="module" src="/src/components/people-list.js"></script>
+<script type="module" src="/src/components/people-store.js"></script>
+<people-store></people-store>
+
+<people-list>
+  <template shadowrootmode="open">
+    <link rel="stylesheet" href="/css/people-list.css">
+
+    <section class="people-grid" vocab="https://schema.org/">
+      <h1 vocab="urn:ui:" typeof="navPeople"></h1>
+      <div class="card-list">
+        <template>
+          <a class="person-card" typeof="Person">
+            <img property="image" alt="" class="avatar">
+            <div class="person-info">
+              <h2 property="name"></h2>
+              <p property="jobTitle"></p>
+              <span property="isActive" class="badge">
+                <span data-badge="true" vocab="urn:ui:" typeof="badgeActive"></span>
+                <span data-badge="false" vocab="urn:ui:" typeof="badgeInactive"></span>
+              </span>
+            </div>
+          </a>
+        </template>
+      </div>
+    </section>
+  </template>
+</people-list>

@@ -1,0 +1,10 @@
+@base <http://localhost:8000/orgs/acme> .
+@prefix schema: <https://schema.org/> .
+@prefix : <#> .
+
+:org a schema:Organization ;
+    schema:name "Acme Semantic Technologies" ;
+    schema:url "https://acme.example.org" ;
+    schema:description "Building the future of linked data on the open web." ;
+    schema:foundingDate "2019" ;
+    schema:numberOfEmployees "42" .

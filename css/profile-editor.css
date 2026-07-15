@@ -174,3 +174,19 @@ fieldset > .sortable-list {
 .remove-btn:hover {
   color: #dc2626;
 }
+
+input[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+input[aria-invalid="true"]:focus,
+textarea[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px #fecaca;
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}

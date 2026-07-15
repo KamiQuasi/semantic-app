@@ -130,3 +130,28 @@ dd a:hover {
   font-style: italic;
   font-size: 0.875rem;
 }
+
+.validation-status {
+  padding: var(--space-sm, 8px) var(--space-lg, 24px);
+  border-top: 1px solid var(--color-border, #e0e0e0);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.conformance.valid {
+  color: #15803d;
+}
+
+.conformance.invalid {
+  color: #dc2626;
+}
+
+.org-name {
+  font-weight: 500;
+}
+
+.org-description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #555);
+  margin-top: var(--space-xs, 4px);
+}

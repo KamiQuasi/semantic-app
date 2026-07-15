@@ -95,3 +95,7 @@ main {
   margin: var(--space-xl) auto;
   padding: 0 var(--space-lg);
 }
+
+main:has(people-list) {
+  max-width: 960px;
+}

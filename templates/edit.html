@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="/css/profile-editor.css">
 
     <form class="editor" vocab="https://schema.org/" resource="#me" typeof="Person">
-      <h1 vocab="#" typeof="editHeading"></h1>
+      <h1 vocab="urn:ui:" typeof="editHeading"></h1>
 
       <label><span typeof="name"></span>
         <input type="text" data-prop="name" property="name"></label>
@@ -44,12 +44,12 @@
         <template>
           <label class="checkbox-item"><input type="checkbox" checked> <span data-text></span></label>
         </template>
-        <input type="text" vocab="#" typeof="placeholderLang" class="add-language-input">
-        <button type="button" vocab="#" typeof="actionAdd" class="add-language-btn"></button>
+        <input type="text" vocab="urn:ui:" typeof="placeholderLang" class="add-language-input">
+        <button type="button" vocab="urn:ui:" typeof="actionAdd" class="add-language-btn"></button>
       </fieldset>
 
       <fieldset>
-        <legend vocab="#" typeof="skillsHint"></legend>
+        <legend vocab="urn:ui:" typeof="skillsHint"></legend>
         <ol property="hasSkill" class="sortable-list">
           <template>
             <li draggable="true">
@@ -59,8 +59,8 @@
             </li>
           </template>
         </ol>
-        <input type="text" vocab="#" typeof="placeholderSkill" class="add-skill-input">
-        <button type="button" vocab="#" typeof="actionAdd" class="add-skill-btn"></button>
+        <input type="text" vocab="urn:ui:" typeof="placeholderSkill" class="add-skill-input">
+        <button type="button" vocab="urn:ui:" typeof="actionAdd" class="add-skill-btn"></button>
       </fieldset>
     </form>
   </template>

@@ -1,6 +1,6 @@
 @prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix schema: <https://schema.org/> .
-@prefix ui:     <#> .
+@prefix ui:     <urn:ui:> .
 
 schema:name            rdfs:label "Full Name"@en, "Nom complet"@fr, "Nombre completo"@es .
 schema:jobTitle        rdfs:label "Job Title"@en, "Poste"@fr, "Cargo"@es .
@@ -12,6 +12,7 @@ schema:hasSkill        rdfs:label "Skills"@en, "Compétences"@fr, "Habilidades"@
 schema:url             rdfs:label "Website"@en, "Site web"@fr, "Sitio web"@es .
 schema:image           rdfs:label "Avatar URL"@en, "URL de l'avatar"@fr, "URL del avatar"@es .
 
+ui:navPeople           rdfs:label "People"@en, "Personnes"@fr, "Personas"@es .
 ui:navProfile          rdfs:label "Profile"@en, "Profil"@fr, "Perfil"@es .
 ui:navEdit             rdfs:label "Edit"@en, "Modifier"@fr, "Editar"@es .
 ui:editHeading         rdfs:label "Edit Profile"@en, "Modifier le profil"@fr, "Editar perfil"@es .
@@ -26,6 +27,11 @@ ui:placeholderSkill    rdfs:label "New skill..."@en, "Nouvelle compétence..."@f
 ui:inactiveNotice      rdfs:label "This profile is currently inactive."@en,
                                   "Ce profil est actuellement inactif."@fr,
                                   "Este perfil está actualmente inactivo."@es .
+
+schema:worksFor        rdfs:label "Organization"@en, "Organisation"@fr, "Organización"@es .
+
+ui:shaclValid          rdfs:label "SHACL Valid"@en, "SHACL valide"@fr, "SHACL válido"@es .
+ui:shaclInvalid        rdfs:label "SHACL Invalid"@en, "SHACL invalide"@fr, "SHACL inválido"@es .
 
 schema:address         rdfs:label "Address"@en, "Adresse"@fr, "Dirección"@es .
 schema:streetAddress   rdfs:label "Street"@en, "Rue"@fr, "Calle"@es .

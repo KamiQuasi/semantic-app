@@ -1,4 +1,4 @@
-import { DataFactory, Parser, Store, Writer } from 'n3';
+import { Dataset, DataFactory } from '@jeswr/sparq';
 import {
   TermWrapper,
   RequiredFrom,
@@ -15,12 +15,12 @@ export const SCHEMA = 'https://schema.org/';
 /** The rdfs:label predicate URI. */
 const RDFS_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label';
 
-const { namedNode } = DataFactory;
+const { namedNode, literal, quad } = DataFactory;
 
 /**
  * Typed RDF wrapper providing getter/setter access to schema.org Person
- * properties backed by an N3 store. Scalar properties use `@rdfjs/wrapper`
- * helpers; `address` is manually resolved as a nested PostalAddress blank node.
+ * properties backed by a sparq Dataset. Scalar properties use `@rdfjs/wrapper`
+ * helpers; `address` is manually resolved as a nested PostalAddress node.
  */
 export class ProfilePerson extends TermWrapper {
   get name(): string {
@@ -85,12 +85,12 @@ export class ProfilePerson extends TermWrapper {
   }
 
   get address(): { streetAddress: string; addressLocality: string; addressCountry: string } | null {
-    const store = this._dataset as Store;
-    const quads = store.getQuads(this._term, namedNode(SCHEMA + 'address'), null, null);
-    if (!quads.length) return null;
-    const addrNode = quads[0].object;
+    const ds = this._dataset as Dataset;
+    const addrQuads = [...ds.match(this._term, namedNode(SCHEMA + 'address'))];
+    if (!addrQuads.length) return null;
+    const addrNode = addrQuads[0].object;
     const get = (prop: string) => {
-      const q = store.getQuads(addrNode, namedNode(SCHEMA + prop), null, null);
+      const q = [...ds.match(addrNode, namedNode(SCHEMA + prop))];
       return q.length ? q[0].object.value : '';
     };
     return {
@@ -101,21 +101,23 @@ export class ProfilePerson extends TermWrapper {
   }
 
   set address(val: { streetAddress: string; addressLocality: string; addressCountry: string }) {
-    const store = this._dataset as Store;
-    const quads = store.getQuads(this._term, namedNode(SCHEMA + 'address'), null, null);
+    const ds = this._dataset as Dataset;
+    const addrQuads = [...ds.match(this._term, namedNode(SCHEMA + 'address'))];
     let addrNode: any;
-    if (quads.length) {
-      addrNode = quads[0].object;
+    if (addrQuads.length) {
+      addrNode = addrQuads[0].object;
       for (const prop of ['streetAddress', 'addressLocality', 'addressCountry']) {
-        store.removeQuads(store.getQuads(addrNode, namedNode(SCHEMA + prop), null, null));
+        for (const q of [...ds.match(addrNode, namedNode(SCHEMA + prop))]) {
+          ds.delete(q);
+        }
       }
     } else {
       addrNode = namedNode('#address');
-      store.addQuad(this._term, namedNode(SCHEMA + 'address'), addrNode);
-      store.addQuad(addrNode, namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), namedNode(SCHEMA + 'PostalAddress'));
+      ds.add(quad(this._term, namedNode(SCHEMA + 'address'), addrNode));
+      ds.add(quad(addrNode, namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), namedNode(SCHEMA + 'PostalAddress')));
     }
     for (const [prop, v] of Object.entries(val)) {
-      store.addQuad(addrNode, namedNode(SCHEMA + prop), DataFactory.literal(v));
+      ds.add(quad(addrNode, namedNode(SCHEMA + prop), literal(v)));
     }
   }
 }
@@ -123,23 +125,109 @@ export class ProfilePerson extends TermWrapper {
 /** Multilingual label map: subject URI → (language code → display text). */
 export type Labels = Map<string, Map<string, string>>;
 
-/** Parse a Turtle string into an N3 Store. */
-export function parseTurtle(text: string): Store {
-  const store = new Store();
-  const parser = new Parser({ format: 'Turtle' });
-  store.addQuads(parser.parse(text));
-  return store;
+const PROFILES_DIR = 'rdf/profiles';
+const UI_PATH = 'rdf/ui.ttl';
+const ORG_PATH = 'rdf/org.ttl';
+
+/** Parse a Turtle string into a sparq Dataset. */
+export async function parseTurtle(text: string): Promise<Dataset> {
+  return await Dataset.fromString(text, 'turtle');
 }
 
-/** Find the `#me` subject in the store and return a typed ProfilePerson wrapper. */
-export function getProfile(store: Store): ProfilePerson {
-  const me = store.getSubjects(null, null, null).find((s: any) => s.value.endsWith('#me'));
-  if (!me) throw new Error('No #me subject found in profile Turtle');
-  return new ProfilePerson(me, store, DataFactory);
+/** Load all .ttl files from rdf/profiles/ and rdf/ui.ttl into a single Dataset. */
+export async function initStore(): Promise<Dataset> {
+  const dataset = await Dataset.create();
+  for await (const entry of Deno.readDir(PROFILES_DIR)) {
+    if (!entry.name.endsWith('.ttl')) continue;
+    const text = await Deno.readTextFile(`${PROFILES_DIR}/${entry.name}`);
+    const ds = await Dataset.fromString(text, 'turtle');
+    for (const q of ds) dataset.add(q);
+  }
+  for (const path of [UI_PATH, ORG_PATH]) {
+    try {
+      const text = await Deno.readTextFile(path);
+      const ds = await Dataset.fromString(text, 'turtle');
+      for (const q of ds) dataset.add(q);
+    } catch {
+      // optional file
+    }
+  }
+  return dataset;
+}
+
+/** Return a ProfilePerson wrapper for a given person IRI. */
+export function getProfileByIRI(dataset: Dataset, personIRI: string): ProfilePerson {
+  return new ProfilePerson(namedNode(personIRI), dataset, DataFactory);
+}
+
+/** Find the `#me` subject in the dataset and return a typed ProfilePerson wrapper. */
+export function getProfile(dataset: Dataset): ProfilePerson {
+  const subjects = new Set<string>();
+  for (const q of dataset) {
+    subjects.add(q.subject.value);
+  }
+  const meIRI = [...subjects].find((s) => s.endsWith('#me'));
+  if (!meIRI) throw new Error('No #me subject found in profile Turtle');
+  return new ProfilePerson(namedNode(meIRI), dataset, DataFactory);
+}
+
+/** List all person IDs and summary data from the dataset. */
+export function listPeople(dataset: Dataset): { id: string; name: string; jobTitle: string; image: string; isActive: boolean }[] {
+  const rdfType = namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
+  const personType = namedNode(SCHEMA + 'Person');
+  const people: { id: string; name: string; jobTitle: string; image: string; isActive: boolean }[] = [];
+
+  for (const q of dataset.match(null, rdfType, personType)) {
+    const personIRI = q.subject.value;
+    const match = personIRI.match(/\/people\/([^/#]+)/);
+    if (!match) continue;
+    const id = match[1];
+    const get = (prop: string) => {
+      const quads = [...dataset.match(q.subject, namedNode(SCHEMA + prop))];
+      return quads.length ? quads[0].object.value : '';
+    };
+    people.push({
+      id,
+      name: get('name'),
+      jobTitle: get('jobTitle'),
+      image: get('image'),
+      isActive: get('isActive') !== 'false',
+    });
+  }
+  return people;
+}
+
+/** Reload a profile file into the dataset, replacing all quads for that person's base IRI. */
+export async function reloadProfile(dataset: Dataset, id: string): Promise<void> {
+  const baseIRI = `http://localhost:8000/people/${id}`;
+  for (const q of [...dataset]) {
+    if (q.subject.value.startsWith(baseIRI)) dataset.delete(q);
+    if (q.object.value.startsWith(baseIRI)) dataset.delete(q);
+  }
+  const text = await Deno.readTextFile(`${PROFILES_DIR}/${id}.ttl`);
+  const ds = await Dataset.fromString(text, 'turtle');
+  for (const q of ds) dataset.add(q);
 }
 
 /** Extract all profile fields into a plain state object for the store. */
 export function toState(person: ProfilePerson): Record<string, unknown> {
+  const ds = person._dataset as Dataset;
+  const worksForQuads = [...ds.match(person._term, namedNode(SCHEMA + 'worksFor'))];
+  let worksFor: Record<string, string> | null = null;
+  if (worksForQuads.length) {
+    const orgNode = worksForQuads[0].object;
+    const getOrg = (prop: string) => {
+      const q = [...ds.match(orgNode, namedNode(SCHEMA + prop))];
+      return q.length ? q[0].object.value : '';
+    };
+    worksFor = {
+      '@id': orgNode.value,
+      name: getOrg('name'),
+      url: getOrg('url'),
+      description: getOrg('description'),
+    };
+  }
+
   return {
     name: person.name,
     jobTitle: person.jobTitle,
@@ -151,6 +239,7 @@ export function toState(person: ProfilePerson): Record<string, unknown> {
     knowsLanguage: [...person.knowsLanguage],
     hasSkill: [...person.hasSkill],
     address: person.address,
+    worksFor,
   };
 }
 
@@ -186,30 +275,93 @@ export function updateFromState(person: ProfilePerson, prop: string, value: unkn
   }
 }
 
-/** Serialize an N3 Store back to Turtle text with schema.org prefixes. */
-export function serializeTurtle(store: Store): string {
-  const writer = new Writer({
-    prefixes: {
-      schema: SCHEMA,
-      xsd: 'http://www.w3.org/2001/XMLSchema#',
-      '': '#',
-    },
-  });
-  writer.addQuads(store.getQuads(null, null, null, null));
-  let result = '';
-  writer.end((_error: Error | null, output: string) => { result = output; });
-  return result;
+/** Serialize a sparq Dataset to Turtle text with schema.org prefixes. */
+export function serializeTurtle(dataset: Dataset): string {
+  return dataset.store.serialize('turtle');
 }
 
-/** Extract rdfs:label quads from a store into a multilingual Labels map. */
-export function loadLabels(store: Store): Labels {
-  const labels: Labels = new Map();
-  const quads = store.getQuads(null, namedNode(RDFS_LABEL), null, null);
+/** Serialize only the quads belonging to a specific profile (including reachable blank nodes). */
+export async function serializeProfile(dataset: Dataset, id: string): Promise<string> {
+  const baseIRI = `http://localhost:8000/people/${id}`;
+  const profileDs = await Dataset.create();
+  const visitedBlanks = new Set<string>();
 
-  for (const quad of quads) {
-    const subject = quad.subject.value;
-    const lang = quad.object.language;
-    const text = quad.object.value;
+  function addBlankNodeQuads(bnodeValue: string) {
+    if (visitedBlanks.has(bnodeValue)) return;
+    visitedBlanks.add(bnodeValue);
+    for (const q of dataset) {
+      if (q.subject.termType === 'BlankNode' && q.subject.value === bnodeValue) {
+        profileDs.add(q);
+        if (q.object.termType === 'BlankNode') {
+          addBlankNodeQuads(q.object.value);
+        }
+      }
+    }
+  }
+
+  for (const q of dataset) {
+    if (q.subject.value.startsWith(baseIRI)) {
+      profileDs.add(q);
+      if (q.object.termType === 'BlankNode') {
+        addBlankNodeQuads(q.object.value);
+      }
+    }
+  }
+
+  return profileDs.store.serialize('turtle');
+}
+
+const SHAPES_PATH = 'rdf/shapes/person.ttl';
+let shapesText: string | null = null;
+
+async function getShapesText(): Promise<string> {
+  if (shapesText === null) {
+    shapesText = await Deno.readTextFile(SHAPES_PATH);
+  }
+  return shapesText;
+}
+
+export interface ValidationResult {
+  conforms: boolean;
+  errors: Record<string, string[]>;
+}
+
+export async function validatePerson(dataset: Dataset, personIRI: string): Promise<ValidationResult> {
+  const shapes = await getShapesText();
+  const id = personIRI.match(/\/people\/([^/#]+)/)?.[1];
+  if (!id) return { conforms: true, errors: {} };
+  const dataTurtle = await serializeProfile(dataset, id);
+
+  try {
+    const report = dataset.store.validate(dataTurtle, shapes, 'turtle');
+    const errors: Record<string, string[]> = {};
+
+    if (report.results) {
+      for (const r of report.results) {
+        const path = r.resultPath ?? r.path ?? '';
+        const prop = path.replace(SCHEMA, '');
+        const msg = r.resultMessage ?? r.message ?? 'Validation failed';
+        if (!errors[prop]) errors[prop] = [];
+        errors[prop].push(msg);
+      }
+    }
+
+    return { conforms: report.conforms ?? true, errors };
+  } catch (e) {
+    console.error('SHACL validation error:', e);
+    return { conforms: true, errors: {} };
+  }
+}
+
+/** Extract rdfs:label quads from a dataset into a multilingual Labels map. */
+export function loadLabels(dataset: Dataset): Labels {
+  const labels: Labels = new Map();
+  const labelPred = namedNode(RDFS_LABEL);
+
+  for (const q of dataset.match(null, labelPred)) {
+    const subject = q.subject.value;
+    const lang = (q.object as any).language;
+    const text = q.object.value;
 
     if (!lang) continue;
 

@@ -10,8 +10,8 @@
         <h1 property="name" data-transform="capitalize"></h1>
         <p property="jobTitle"></p>
         <span property="isActive" class="badge">
-          <span data-badge="true" vocab="#" typeof="badgeActive"></span>
-          <span data-badge="false" vocab="#" typeof="badgeInactive"></span>
+          <span data-badge="true" vocab="urn:ui:" typeof="badgeActive"></span>
+          <span data-badge="false" vocab="urn:ui:" typeof="badgeInactive"></span>
         </span>
       </header>
 
@@ -38,6 +38,15 @@
           </dd>
         </div>
 
+        <div data-if="worksFor">
+          <dt typeof="worksFor"></dt>
+          <dd property="worksFor" typeof="Organization">
+            <span property="name" class="org-name"></span>
+            (<a property="url" target="_blank" class="org-link"></a>)
+            <p property="description" class="org-description"></p>
+          </dd>
+        </div>
+
         <dt typeof="knowsLanguage"></dt>
         <dd property="knowsLanguage" class="chips">
           <template><span class="chip" data-transform="uppercase"></span></template>
@@ -51,7 +60,12 @@
         </dd>
       </dl>
 
-      <p data-if="isActive:false" class="notice" vocab="#" typeof="inactiveNotice"></p>
+      <p data-if="isActive:false" class="notice" vocab="urn:ui:" typeof="inactiveNotice"></p>
+
+      <footer class="validation-status">
+        <span data-if="conforms:true" class="conformance valid" vocab="urn:ui:" typeof="shaclValid"></span>
+        <span data-if="conforms:false" class="conformance invalid" vocab="urn:ui:" typeof="shaclInvalid"></span>
+      </footer>
     </article>
   </template>
 </profile-card>

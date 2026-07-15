@@ -1,0 +1,22 @@
+@base <http://localhost:8000/people/carol> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <#> .
+
+:me a schema:Person ;
+    schema:name "Carol Nguyen" ;
+    schema:jobTitle "UX Designer" ;
+    schema:email "carol@example.org" ;
+    schema:description "Designing accessible, human-centered interfaces grounded in linked data principles." ;
+    schema:url "https://carol.example.org" ;
+    schema:image "https://i.pravatar.cc/200?u=carol" ;
+    schema:isActive false ;
+    schema:worksFor <http://localhost:8000/orgs/acme#org> ;
+    schema:knowsLanguage "JavaScript", "CSS", "HTML" ;
+    schema:hasSkill ( "Accessibility" "Design Systems" "Prototyping" "User Research" ) ;
+    schema:address :address .
+
+:address a schema:PostalAddress ;
+    schema:streetAddress "100 Queen Street" ;
+    schema:addressLocality "Toronto" ;
+    schema:addressCountry "CA" .

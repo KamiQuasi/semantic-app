@@ -99,7 +99,7 @@ function resolveLabels(
 ): void {
   for (const el of root.querySelectorAll('[typeof]')) {
     const term = el.getAttribute('typeof');
-    if (term === 'Person') continue;
+    if (term === 'Person' || term === 'Organization' || term === 'PostalAddress') continue;
 
     const vocab = el.closest('[vocab]')?.getAttribute('vocab') ?? SCHEMA;
     const uri = vocab + term;
@@ -122,7 +122,10 @@ function resolveState(
   root: { querySelectorAll: Function },
   state: Record<string, unknown>,
 ): void {
+  const processed = new Set();
+
   for (const el of root.querySelectorAll('[property]')) {
+    if (processed.has(el)) continue;
     const prop = el.getAttribute('property');
     if (!prop || prop === 'rdfs:label') continue;
     if (!(prop in state)) continue;
@@ -133,6 +136,7 @@ function resolveState(
 
     if (typeof value === 'object' && value !== null) {
       el.setAttribute('content', JSON.stringify(value));
+      for (const nested of el.querySelectorAll('[property]')) processed.add(nested);
       resolveState(el, value as Record<string, unknown>);
       continue;
     }
@@ -172,6 +176,22 @@ function resolveState(
         el.textContent = strVal;
         break;
     }
+  }
+}
+
+function resolveValidation(
+  root: { querySelectorAll: Function },
+  errors: Record<string, string[]>,
+): void {
+  for (const el of root.querySelectorAll('[data-prop]')) {
+    const prop = el.getAttribute('data-prop')!;
+    const key = prop.includes('.') ? prop.split('.')[0] : prop;
+    const msgs = errors[key];
+    if (!msgs?.length) continue;
+    el.setAttribute('aria-invalid', 'true');
+    el.setAttribute('data-error', msgs[0]);
+    const errorSpan = `<span class="field-error">${esc(msgs[0])}</span>`;
+    el.insertAdjacentHTML?.('afterend', errorSpan);
   }
 }
 
@@ -236,11 +256,89 @@ function resolveConditionalAttrs(
  * injecting the result into the shell, and returning a complete HTML Response.
  * Declarative shadow DOM `<template shadowrootmode>` content is resolved separately.
  */
+export async function renderPeoplePage(
+  people: { id: string; name: string; jobTitle: string; image: string; isActive: boolean }[],
+  labels: Labels,
+  lang = 'en',
+): Promise<Response> {
+  let pageHtml: string;
+  let shellHtml: string;
+  try {
+    [pageHtml, shellHtml] = await Promise.all([
+      Deno.readTextFile(TEMPLATES_DIR + 'people.html'),
+      Deno.readTextFile(TEMPLATES_DIR + 'shell.html'),
+    ]);
+  } catch {
+    return new Response('Template not found', { status: 500 });
+  }
+
+  const pageDoc = parse(pageHtml);
+
+  for (const shadowTpl of pageDoc.querySelectorAll('template[shadowrootmode]')) {
+    const innerHtml = shadowTpl.innerHTML;
+    const innerDoc = parse(innerHtml);
+    resolveLabels(innerDoc.body, labels);
+
+    const tpl = innerDoc.body.querySelector('.card-list > template');
+    if (tpl) {
+      const tplHtml = tpl.innerHTML.trim();
+      let insertAfter: any = tpl;
+      for (const person of people) {
+        const wrapper = parse(`<body>${tplHtml}</body>`).body;
+        const el = wrapper.firstElementChild;
+        if (!el) continue;
+
+        el.setAttribute('href', `/profile/${esc(person.id)}`);
+        el.setAttribute('data-id', person.id);
+        const state: Record<string, unknown> = {
+          name: person.name,
+          jobTitle: person.jobTitle,
+          image: person.image,
+          isActive: person.isActive,
+        };
+        resolveLabels(el, labels);
+        resolveState(el, state);
+        resolveConditionals(el, state);
+
+        insertAfter.after(el);
+        insertAfter = el;
+      }
+    }
+
+    shadowTpl.innerHTML = innerDoc.head.innerHTML + innerDoc.body.innerHTML;
+  }
+
+  const shellDoc = parse(shellHtml);
+  resolveLabels(shellDoc.body, labels);
+
+  const storeEl = shellDoc.querySelector('profile-store');
+  if (storeEl) storeEl.remove();
+  for (const s of shellDoc.querySelectorAll('script[type="module"][src*="profile-store"]')) s.remove();
+
+  const main = shellDoc.querySelector('main')!;
+  main.innerHTML = pageDoc.head.innerHTML + pageDoc.body.innerHTML;
+
+  const stateScript = shellDoc.querySelector('#initial-state')!;
+  stateScript.textContent = JSON.stringify({ people });
+
+  shellDoc.documentElement.setAttribute('lang', lang);
+
+  const activeLink = shellDoc.querySelector('a[href="/people"]');
+  if (activeLink) activeLink.setAttribute('aria-current', 'page');
+
+  const html = '<!DOCTYPE html>\n' + shellDoc.documentElement.outerHTML;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
+}
+
 export async function renderPage(
   page: 'profile' | 'edit',
   state: Record<string, unknown>,
   labels: Labels,
   lang = 'en',
+  resourceIRI?: string,
 ): Promise<Response> {
   let pageHtml: string;
   let shellHtml: string;
@@ -253,6 +351,14 @@ export async function renderPage(
     return new Response('Template not found', { status: 500 });
   }
 
+  if (resourceIRI) {
+    const baseIRI = resourceIRI.replace(/#.*$/, '');
+    pageHtml = pageHtml.replaceAll('resource="#me"', `resource="${esc(resourceIRI)}"`);
+    pageHtml = pageHtml.replaceAll('resource="#address"', `resource="${esc(baseIRI + '#address')}"`);
+  }
+
+  const profileId = resourceIRI?.match(/\/people\/([^/#]+)/)?.[1];
+
   const pageDoc = parse(pageHtml);
 
   for (const shadowTpl of pageDoc.querySelectorAll('template[shadowrootmode]')) {
@@ -261,6 +367,10 @@ export async function renderPage(
     resolveTemplates(innerDoc.body, state);
     resolveLabels(innerDoc.body, labels);
     resolveState(innerDoc.body, state);
+    const validationErrors = (state.validationErrors ?? {}) as Record<string, string[]>;
+    if (Object.keys(validationErrors).length) {
+      resolveValidation(innerDoc.body, validationErrors);
+    }
     resolveTransforms(innerDoc.body);
     resolveConditionals(innerDoc.body, state);
     resolveConditionalAttrs(innerDoc.body, state);
@@ -270,6 +380,17 @@ export async function renderPage(
   const shellDoc = parse(shellHtml);
   resolveLabels(shellDoc.body, labels);
 
+  if (profileId) {
+    for (const a of shellDoc.querySelectorAll('nav a[href]')) {
+      const href = a.getAttribute('href')!;
+      if (href === '/profile') a.setAttribute('href', `/profile/${profileId}`);
+      else if (href === '/edit') a.setAttribute('href', `/edit/${profileId}`);
+    }
+
+    const eventsScript = shellDoc.querySelector('#events-url');
+    if (eventsScript) eventsScript.textContent = `/api/events/${profileId}`;
+  }
+
   const main = shellDoc.querySelector('main')!;
   main.innerHTML = pageDoc.head.innerHTML + pageDoc.body.innerHTML;
 
@@ -278,13 +399,13 @@ export async function renderPage(
 
   shellDoc.documentElement.setAttribute('lang', lang);
 
-  const activeHref = page === 'profile' ? '/profile' : '/edit';
+  const activeHref = page === 'profile' ? `/profile/${profileId}` : `/edit/${profileId}`;
   const activeLink = shellDoc.querySelector(`a[href="${activeHref}"]`);
   if (activeLink) activeLink.setAttribute('aria-current', 'page');
 
   const html = '<!DOCTYPE html>\n' + shellDoc.documentElement.outerHTML;
 
   return new Response(html, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
   });
 }
