@@ -61,11 +61,25 @@ class ProfileCard extends HTMLElement {
   }
 
   set jobTitle(val) {
-    this.#setText(this.#el('jobTitle'), val);
+    this.#setTextByLang('jobTitle', val);
   }
 
   set description(val) {
-    this.#setText(this.#el('description'), val);
+    this.#setTextByLang('description', val);
+  }
+
+  /**
+   * Update every language variant of a multi-lang property (elements sharing
+   * `property="${prop}"`, differentiated by their `xml:lang` attribute).
+   * @param {string} prop
+   * @param {Record<string, string>} valueMap
+   */
+  #setTextByLang(prop, valueMap) {
+    if (!valueMap || typeof valueMap !== 'object') return;
+    for (const el of this.shadowRoot.querySelectorAll(`[property="${prop}"]`)) {
+      const lang = el.getAttribute('xml:lang');
+      if (lang) this.#setText(el, valueMap[lang] ?? valueMap.en ?? '');
+    }
   }
 
   set email(val) {
@@ -98,6 +112,20 @@ class ProfileCard extends HTMLElement {
       const el = container.querySelector(`[property="${prop}"]`);
       if (el) this.#setText(el, String(v));
     }
+  }
+
+  set worksFor(val) {
+    const container = this.#el('worksFor');
+    if (!container) return;
+    const nameEl = container.querySelector('[property="name"]');
+    if (nameEl) this.#setText(nameEl, val?.name ?? '');
+    const urlEl = container.querySelector('[property="url"]');
+    if (urlEl) {
+      urlEl.href = val?.url ?? '';
+      this.#setText(urlEl, val?.url ?? '');
+    }
+    const descEl = container.querySelector('[property="description"]');
+    if (descEl) this.#setText(descEl, val?.description ?? '');
   }
 
   set knowsLanguage(val) {

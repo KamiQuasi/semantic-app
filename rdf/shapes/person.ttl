@@ -1,6 +1,7 @@
 @prefix sh:     <http://www.w3.org/ns/shacl#> .
 @prefix schema: <https://schema.org/> .
 @prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 <urn:shapes:PersonShape> a sh:NodeShape ;
     sh:targetClass schema:Person ;
@@ -27,18 +28,18 @@
 
     sh:property [
         sh:path schema:jobTitle ;
-        sh:maxCount 1 ;
-        sh:datatype xsd:string ;
+        sh:uniqueLang true ;
+        sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] ) ;
         sh:name "jobTitle" ;
-        sh:message "Job title must be a string." ;
+        sh:message "Job title must be a string, with at most one per language plus an optional untagged default." ;
     ] ;
 
     sh:property [
         sh:path schema:description ;
-        sh:maxCount 1 ;
-        sh:datatype xsd:string ;
+        sh:uniqueLang true ;
+        sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] ) ;
         sh:name "description" ;
-        sh:message "Bio must be a string." ;
+        sh:message "Bio must be a string, with at most one per language plus an optional untagged default." ;
     ] ;
 
     sh:property [

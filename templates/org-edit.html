@@ -1,0 +1,31 @@
+<script type="module" src="/src/components/org-editor.js"></script>
+
+<org-editor>
+  <template shadowrootmode="open">
+    <link rel="stylesheet" href="/css/org-editor.css">
+
+    <form class="editor" vocab="https://schema.org/" resource="#org" typeof="Organization">
+      <h1 vocab="urn:ui:" typeof="editOrgHeading"></h1>
+
+      <label><span typeof="name"></span>
+        <input type="text" data-prop="name" property="name"></label>
+
+      <label><span typeof="url"></span>
+        <input type="url" data-prop="url" property="url"></label>
+
+      <label><span typeof="description"></span>
+        <textarea data-prop="description" property="description" rows="3"></textarea></label>
+
+      <label><span typeof="foundingDate"></span>
+        <input type="text" data-prop="foundingDate" property="foundingDate"></label>
+
+      <label><span typeof="numberOfEmployees"></span>
+        <input type="text" data-prop="numberOfEmployees" property="numberOfEmployees"></label>
+
+      <button type="button" class="delete-btn" vocab="urn:ui:" typeof="actionDelete"></button>
+    </form>
+  </template>
+</org-editor>
+
+<script type="module" src="/src/components/org-store.js"></script>
+<org-store></org-store>

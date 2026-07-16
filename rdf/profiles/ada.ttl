@@ -10,12 +10,16 @@
 <http://localhost:8000/people/ada#me>
   a <https://schema.org/Person> ;
   <https://schema.org/address> <http://localhost:8000/people/ada#address> ;
-  <https://schema.org/description> "Passionate about algorithms, analytical engines, and the poetical science of computing." ;
+  <https://schema.org/description> "Passionate about algorithms, analytical engines, and the poetical science of computing.",
+    "Passionnée par les algorithmes, les machines analytiques et la science poétique du calcul."@fr,
+    "Apasionada por los algoritmos, los motores analíticos y la ciencia poética del cálculo."@es ;
   <https://schema.org/email> "ada@example.org" ;
   <https://schema.org/hasSkill> _:c3ca753beb9e0ec5bc7cc5e492141881 ;
   <https://schema.org/image> "https://i.pravatar.cc/200?u=ada" ;
   <https://schema.org/isActive> "true"^^xsd:boolean ;
-  <https://schema.org/jobTitle> "Senior Software Engineer" ;
+  <https://schema.org/jobTitle> "Senior Software Engineer",
+    "Ingénieure logicielle senior"@fr,
+    "Ingeniera de software sénior"@es ;
   <https://schema.org/knowsLanguage> "Deno",
     "Python",
     "Rust",

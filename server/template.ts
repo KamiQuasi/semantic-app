@@ -1,5 +1,5 @@
 import { DOMParser } from '@b-fuze/deno-dom';
-import { SCHEMA, type Labels } from './rdf.ts';
+import { SCHEMA, DEFAULT_LANG, type Labels } from './rdf.ts';
 import { transform } from '../src/utils/transform.js';
 
 /** Absolute path to the templates directory, resolved from this module's URL. */
@@ -130,15 +130,28 @@ function resolveState(
     if (!prop || prop === 'rdfs:label') continue;
     if (!(prop in state)) continue;
 
-    const value = state[prop];
+    let value = state[prop];
     if (value === undefined || value === null) continue;
     if (Array.isArray(value) || value instanceof Set) continue;
 
     if (typeof value === 'object' && value !== null) {
-      el.setAttribute('content', JSON.stringify(value));
-      for (const nested of el.querySelectorAll('[property]')) processed.add(nested);
-      resolveState(el, value as Record<string, unknown>);
-      continue;
+      const xmlLang = el.getAttribute('xml:lang');
+      const dataLang = el.getAttribute('data-lang');
+      if (xmlLang) {
+        // Display markup opts into fallback: missing translations show the RDF-native
+        // untagged default (DEFAULT_LANG) rather than going blank.
+        const map = value as Record<string, unknown>;
+        value = map[xmlLang] ?? map[DEFAULT_LANG] ?? '';
+      } else if (dataLang) {
+        // Editor markup wants the exact value only — no fallback — so translators
+        // can tell whether a language is actually translated.
+        value = (value as Record<string, unknown>)[dataLang] ?? '';
+      } else {
+        el.setAttribute('content', JSON.stringify(value));
+        for (const nested of el.querySelectorAll('[property]')) processed.add(nested);
+        resolveState(el, value as Record<string, unknown>);
+        continue;
+      }
     }
 
     const strVal = String(value);
@@ -208,7 +221,10 @@ function resolveConditionals(
       const [prop, val] = cond.split(':');
       visible = String(state[prop]) === val;
     } else {
-      visible = Boolean(state[cond]);
+      const val = state[cond];
+      visible = val && typeof val === 'object' && !Array.isArray(val)
+        ? Object.values(val).some(Boolean)
+        : Boolean(val);
     }
 
     if (!visible) {
@@ -248,6 +264,13 @@ function resolveConditionalAttrs(
       if (active) el.setAttribute(targetAttr, '');
       else el.removeAttribute(targetAttr);
     }
+  }
+}
+
+/** Remove the person-scoped "Profile"/"Edit" nav links; they only make sense when a person is in view. */
+function removeContextualNav(shellDoc: { querySelectorAll: Function }): void {
+  for (const a of shellDoc.querySelectorAll('a[typeof="navProfile"], a[typeof="navEdit"]')) {
+    a.remove();
   }
 }
 
@@ -314,6 +337,7 @@ export async function renderPeoplePage(
   const storeEl = shellDoc.querySelector('profile-store');
   if (storeEl) storeEl.remove();
   for (const s of shellDoc.querySelectorAll('script[type="module"][src*="profile-store"]')) s.remove();
+  removeContextualNav(shellDoc);
 
   const main = shellDoc.querySelector('main')!;
   main.innerHTML = pageDoc.head.innerHTML + pageDoc.body.innerHTML;
@@ -324,6 +348,136 @@ export async function renderPeoplePage(
   shellDoc.documentElement.setAttribute('lang', lang);
 
   const activeLink = shellDoc.querySelector('a[href="/people"]');
+  if (activeLink) activeLink.setAttribute('aria-current', 'page');
+
+  const html = '<!DOCTYPE html>\n' + shellDoc.documentElement.outerHTML;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
+}
+
+/** Render the `/orgs` directory listing, SSR-stamping org cards for a no-JS-flash initial paint. */
+export async function renderOrgsPage(
+  orgs: { id: string; name: string; description: string }[],
+  labels: Labels,
+  lang = 'en',
+): Promise<Response> {
+  let pageHtml: string;
+  let shellHtml: string;
+  try {
+    [pageHtml, shellHtml] = await Promise.all([
+      Deno.readTextFile(TEMPLATES_DIR + 'orgs.html'),
+      Deno.readTextFile(TEMPLATES_DIR + 'shell.html'),
+    ]);
+  } catch {
+    return new Response('Template not found', { status: 500 });
+  }
+
+  const pageDoc = parse(pageHtml);
+
+  for (const shadowTpl of pageDoc.querySelectorAll('template[shadowrootmode]')) {
+    const innerHtml = shadowTpl.innerHTML;
+    const innerDoc = parse(innerHtml);
+    resolveLabels(innerDoc.body, labels);
+
+    const tpl = innerDoc.body.querySelector('.card-list > template');
+    if (tpl) {
+      const tplHtml = tpl.innerHTML.trim();
+      let insertAfter: any = tpl;
+      for (const org of orgs) {
+        const wrapper = parse(`<body>${tplHtml}</body>`).body;
+        const el = wrapper.firstElementChild;
+        if (!el) continue;
+
+        el.setAttribute('data-id', org.id);
+        const editLink = el.querySelector('a');
+        if (editLink) editLink.setAttribute('href', `/orgs/edit/${esc(org.id)}`);
+        const state: Record<string, unknown> = { name: org.name, description: org.description };
+        resolveLabels(el, labels);
+        resolveState(el, state);
+
+        insertAfter.after(el);
+        insertAfter = el;
+      }
+    }
+
+    shadowTpl.innerHTML = innerDoc.head.innerHTML + innerDoc.body.innerHTML;
+  }
+
+  const shellDoc = parse(shellHtml);
+  resolveLabels(shellDoc.body, labels);
+
+  const storeEl = shellDoc.querySelector('profile-store');
+  if (storeEl) storeEl.remove();
+  for (const s of shellDoc.querySelectorAll('script[type="module"][src*="profile-store"]')) s.remove();
+  removeContextualNav(shellDoc);
+
+  const main = shellDoc.querySelector('main')!;
+  main.innerHTML = pageDoc.head.innerHTML + pageDoc.body.innerHTML;
+
+  const stateScript = shellDoc.querySelector('#initial-state')!;
+  stateScript.textContent = JSON.stringify({ orgs });
+
+  shellDoc.documentElement.setAttribute('lang', lang);
+
+  const activeLink = shellDoc.querySelector('a[href="/orgs"]');
+  if (activeLink) activeLink.setAttribute('aria-current', 'page');
+
+  const html = '<!DOCTYPE html>\n' + shellDoc.documentElement.outerHTML;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
+}
+
+/** Render the `/orgs/edit/:id` organization editor page. */
+export async function renderOrgEditPage(
+  id: string,
+  state: Record<string, unknown>,
+  labels: Labels,
+  lang = 'en',
+): Promise<Response> {
+  let pageHtml: string;
+  let shellHtml: string;
+  try {
+    [pageHtml, shellHtml] = await Promise.all([
+      Deno.readTextFile(TEMPLATES_DIR + 'org-edit.html'),
+      Deno.readTextFile(TEMPLATES_DIR + 'shell.html'),
+    ]);
+  } catch {
+    return new Response('Template not found', { status: 500 });
+  }
+
+  pageHtml = pageHtml.replaceAll('resource="#org"', `resource="${esc(`http://localhost:8000/orgs/${id}#org`)}"`);
+
+  const pageDoc = parse(pageHtml);
+
+  for (const shadowTpl of pageDoc.querySelectorAll('template[shadowrootmode]')) {
+    const innerHtml = shadowTpl.innerHTML;
+    const innerDoc = parse(innerHtml);
+    resolveLabels(innerDoc.body, labels);
+    resolveState(innerDoc.body, state);
+    shadowTpl.innerHTML = innerDoc.head.innerHTML + innerDoc.body.innerHTML;
+  }
+
+  const shellDoc = parse(shellHtml);
+  resolveLabels(shellDoc.body, labels);
+
+  const storeEl = shellDoc.querySelector('profile-store');
+  if (storeEl) storeEl.remove();
+  for (const s of shellDoc.querySelectorAll('script[type="module"][src*="profile-store"]')) s.remove();
+  removeContextualNav(shellDoc);
+
+  const main = shellDoc.querySelector('main')!;
+  main.innerHTML = pageDoc.head.innerHTML + pageDoc.body.innerHTML;
+
+  const stateScript = shellDoc.querySelector('#initial-state')!;
+  stateScript.textContent = JSON.stringify(state);
+
+  shellDoc.documentElement.setAttribute('lang', lang);
+
+  const activeLink = shellDoc.querySelector('a[href="/orgs"]');
   if (activeLink) activeLink.setAttribute('aria-current', 'page');
 
   const html = '<!DOCTYPE html>\n' + shellDoc.documentElement.outerHTML;
@@ -374,6 +528,22 @@ export async function renderPage(
     resolveTransforms(innerDoc.body);
     resolveConditionals(innerDoc.body, state);
     resolveConditionalAttrs(innerDoc.body, state);
+
+    if (page === 'edit') {
+      const availableOrgs = (state.availableOrgs ?? []) as { id: string; name: string }[];
+      const datalist = innerDoc.body.querySelector('#orgs-datalist');
+      if (datalist) {
+        datalist.innerHTML = availableOrgs
+          .map((org) => `<option value="${esc(org.name)}" data-id="${esc(org.id)}"></option>`)
+          .join('');
+      }
+      const worksForInput = innerDoc.body.querySelector('[data-prop="worksForId"]');
+      if (worksForInput) {
+        const worksFor = state.worksFor as { name?: string } | null;
+        worksForInput.setAttribute('value', esc(worksFor?.name ?? ''));
+      }
+    }
+
     shadowTpl.innerHTML = innerDoc.head.innerHTML + innerDoc.body.innerHTML;
   }
 

@@ -1,0 +1,30 @@
+<script type="module" src="/src/components/orgs-list.js"></script>
+<script type="module" src="/src/components/orgs-store.js"></script>
+<orgs-store></orgs-store>
+
+<orgs-list>
+  <template shadowrootmode="open">
+    <link rel="stylesheet" href="/css/orgs-list.css">
+
+    <section class="orgs-grid" vocab="https://schema.org/">
+      <h1 vocab="urn:ui:" typeof="navOrganizations"></h1>
+
+      <div class="add-org">
+        <input type="text" class="add-org-input" vocab="urn:ui:" typeof="placeholderOrgName">
+        <button type="button" class="add-org-btn" vocab="urn:ui:" typeof="actionAdd"></button>
+      </div>
+
+      <div class="card-list">
+        <template>
+          <div class="org-card" typeof="Organization">
+            <a class="org-card-link">
+              <h2 property="name"></h2>
+              <p property="description"></p>
+            </a>
+            <button type="button" class="delete-btn" vocab="urn:ui:" typeof="actionDelete"></button>
+          </div>
+        </template>
+      </div>
+    </section>
+  </template>
+</orgs-list>

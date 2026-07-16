@@ -21,8 +21,10 @@ class ProfileEditor extends HTMLElement {
 
     this.#store = await getStore();
     this.#bindInputs();
+    this.#bindLangTabs();
     this.#bindLanguages();
     this.#bindSkills();
+    this.#bindWorksFor();
 
     this.#store.addEventListener('change', (e) => {
       const changes = e.detail?.changes;
@@ -40,6 +42,7 @@ class ProfileEditor extends HTMLElement {
     const sr = this.shadowRoot;
     for (const input of sr.querySelectorAll('[data-prop]')) {
       const prop = input.dataset.prop;
+      if (prop === 'worksForId') continue;
       const eventType = input.type === 'checkbox' ? 'change' : 'input';
 
       input.addEventListener(eventType, () => {
@@ -54,6 +57,21 @@ class ProfileEditor extends HTMLElement {
           this.#store.state[prop] = input.value;
         }
       });
+    }
+  }
+
+  /** Wire up the EN/FR/ES tab buttons above each multi-language field to show/hide its inputs. */
+  #bindLangTabs() {
+    const sr = this.shadowRoot;
+    for (const group of sr.querySelectorAll('.i18n-field')) {
+      const tabs = group.querySelectorAll('.lang-tab');
+      const fields = group.querySelectorAll('input[data-lang], textarea[data-lang]');
+      for (const tab of tabs) {
+        tab.addEventListener('click', () => {
+          for (const t of tabs) t.classList.toggle('active', t === tab);
+          for (const f of fields) f.hidden = f.dataset.lang !== tab.dataset.lang;
+        });
+      }
     }
   }
 
@@ -90,6 +108,19 @@ class ProfileEditor extends HTMLElement {
         if (e.key === 'Enter') { e.preventDefault(); addLanguage(); }
       });
     }
+  }
+
+  /** Wire up the worksFor org autocomplete: resolve the selected name to an org id via the datalist. */
+  #bindWorksFor() {
+    const sr = this.shadowRoot;
+    const input = sr.querySelector('[data-prop="worksForId"]');
+    const datalist = sr.querySelector('#orgs-datalist');
+    if (!input || !datalist) return;
+
+    input.addEventListener('change', () => {
+      const option = [...datalist.options].find((o) => o.value === input.value);
+      this.#store.state.worksForId = option ? option.dataset.id : '';
+    });
   }
 
   /** Wire up skill drag-and-drop reordering, removal, and the add-skill input/button. */
@@ -180,10 +211,11 @@ class ProfileEditor extends HTMLElement {
         }
       }
 
-      if (key === 'address' && typeof val === 'object' && val !== null) {
-        for (const [child, v] of Object.entries(val)) {
-          const nested = sr.querySelector(`[data-prop="${key}.${child}"]`);
-          if (nested && nested !== sr.activeElement) nested.value = v ?? '';
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        for (const nested of sr.querySelectorAll(`[data-prop^="${key}."]`)) {
+          if (nested === sr.activeElement) continue;
+          const child = nested.dataset.prop.slice(key.length + 1);
+          nested.value = val[child] ?? '';
         }
       }
 
@@ -198,6 +230,13 @@ class ProfileEditor extends HTMLElement {
 
       if (key === 'hasSkill') {
         this.#rebuildSkillList(val ?? []);
+      }
+
+      if (key === 'worksFor') {
+        const worksForInput = sr.querySelector('[data-prop="worksForId"]');
+        if (worksForInput && worksForInput !== sr.activeElement) {
+          worksForInput.value = val?.name ?? '';
+        }
       }
     }
   }

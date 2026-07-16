@@ -37,3 +37,17 @@ schema:address         rdfs:label "Address"@en, "Adresse"@fr, "Dirección"@es .
 schema:streetAddress   rdfs:label "Street"@en, "Rue"@fr, "Calle"@es .
 schema:addressLocality rdfs:label "City"@en, "Ville"@fr, "Ciudad"@es .
 schema:addressCountry  rdfs:label "Country"@en, "Pays"@fr, "País"@es .
+
+ui:langEn              rdfs:label "English"@en, "Anglais"@fr, "Inglés"@es .
+ui:langFr              rdfs:label "French"@en, "Français"@fr, "Francés"@es .
+ui:langEs              rdfs:label "Spanish"@en, "Espagnol"@fr, "Español"@es .
+
+ui:navOrganizations    rdfs:label "Organizations"@en, "Organisations"@fr, "Organizaciones"@es .
+ui:editOrgHeading      rdfs:label "Edit Organization"@en, "Modifier l'organisation"@fr, "Editar organización"@es .
+ui:actionDelete        rdfs:label "Delete"@en, "Supprimer"@fr, "Eliminar"@es .
+ui:placeholderOrgName  rdfs:label "New organization name..."@en,
+                                  "Nom de la nouvelle organisation..."@fr,
+                                  "Nombre de la nueva organización..."@es .
+
+schema:foundingDate        rdfs:label "Founded"@en, "Fondée en"@fr, "Fundada en"@es .
+schema:numberOfEmployees   rdfs:label "Employees"@en, "Employés"@fr, "Empleados"@es .

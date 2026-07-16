@@ -10,12 +10,16 @@
 <http://localhost:8000/people/bob#me>
   a <https://schema.org/Person> ;
   <https://schema.org/address> <http://localhost:8000/people/bob#address> ;
-  <https://schema.org/description> "Building data pipelines and knowledge graphs for the semantic web." ;
+  <https://schema.org/description> "Building data pipelines and knowledge graphs for the semantic web.",
+    "Construction de pipelines de données et de graphes de connaissances pour le web sémantique."@fr,
+    "Construyendo canalizaciones de datos y grafos de conocimiento para la web semántica."@es ;
   <https://schema.org/email> "bob@example.org" ;
   <https://schema.org/hasSkill> _:f93f5f4be77d784c2fb27eacb9b67242 ;
   <https://schema.org/image> "https://i.pravatar.cc/200?u=bob" ;
   <https://schema.org/isActive> "true"^^xsd:boolean ;
-  <https://schema.org/jobTitle> "Principal Data Engineer" ;
+  <https://schema.org/jobTitle> "Principal Data Engineer",
+    "Ingénieure de données principale"@fr,
+    "Ingeniera de datos principal"@es ;
   <https://schema.org/knowsLanguage> "Python",
     "SPARQL",
     "SQL" ;

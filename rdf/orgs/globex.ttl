@@ -1,0 +1,10 @@
+@base <http://localhost:8000/orgs/globex> .
+@prefix schema: <https://schema.org/> .
+@prefix : <#> .
+
+:org a schema:Organization ;
+    schema:name "Globex Knowledge Systems" ;
+    schema:url "https://globex.example.org" ;
+    schema:description "Modeling the world's data as graphs, one triple at a time." ;
+    schema:foundingDate "2015" ;
+    schema:numberOfEmployees "128" .

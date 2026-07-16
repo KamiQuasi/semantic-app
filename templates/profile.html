@@ -8,7 +8,9 @@
       <header>
         <img property="image" alt="Avatar" class="avatar">
         <h1 property="name" data-transform="capitalize"></h1>
-        <p property="jobTitle"></p>
+        <p property="jobTitle" xml:lang="en"></p>
+        <p property="jobTitle" xml:lang="fr" hidden></p>
+        <p property="jobTitle" xml:lang="es" hidden></p>
         <span property="isActive" class="badge">
           <span data-badge="true" vocab="urn:ui:" typeof="badgeActive"></span>
           <span data-badge="false" vocab="urn:ui:" typeof="badgeInactive"></span>
@@ -18,7 +20,9 @@
       <dl>
         <div data-if="description">
           <dt typeof="description"></dt>
-          <dd property="description"></dd>
+          <dd property="description" xml:lang="en"></dd>
+          <dd property="description" xml:lang="fr" hidden></dd>
+          <dd property="description" xml:lang="es" hidden></dd>
         </div>
 
         <div data-if="isActive:true">

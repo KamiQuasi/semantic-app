@@ -1,0 +1,10 @@
+@base <http://localhost:8000/orgs/triplewave> .
+@prefix schema: <https://schema.org/> .
+@prefix : <#> .
+
+:org a schema:Organization ;
+    schema:name "TripleWave Data Labs" ;
+    schema:url "https://triplewave.example.org" ;
+    schema:description "Open-source tooling for RDF, SPARQL, and knowledge graph infrastructure." ;
+    schema:foundingDate "2021" ;
+    schema:numberOfEmployees "17" .

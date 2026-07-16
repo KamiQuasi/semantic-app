@@ -5,9 +5,11 @@
 
 :me a schema:Person ;
     schema:name "Carol Nguyen" ;
-    schema:jobTitle "UX Designer" ;
+    schema:jobTitle "UX Designer", "Conceptrice UX"@fr, "Diseñadora UX"@es ;
     schema:email "carol@example.org" ;
-    schema:description "Designing accessible, human-centered interfaces grounded in linked data principles." ;
+    schema:description "Designing accessible, human-centered interfaces grounded in linked data principles.",
+        "Conception d'interfaces accessibles et centrées sur l'humain, fondées sur les principes des données liées."@fr,
+        "Diseñando interfaces accesibles y centradas en el ser humano, basadas en los principios de datos enlazados."@es ;
     schema:url "https://carol.example.org" ;
     schema:image "https://i.pravatar.cc/200?u=carol" ;
     schema:isActive false ;

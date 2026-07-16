@@ -1,0 +1,98 @@
+:host {
+  display: block;
+}
+
+.orgs-grid h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--space-lg, 24px);
+}
+
+.add-org {
+  display: flex;
+  gap: var(--space-sm, 8px);
+  margin-bottom: var(--space-lg, 24px);
+}
+
+.add-org-input {
+  flex: 1 1 auto;
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--radius, 8px);
+  font-family: inherit;
+  font-size: 0.9375rem;
+}
+
+.add-org-btn {
+  padding: var(--space-sm, 8px) var(--space-md, 16px);
+  border: 1px solid var(--color-accent, #2563eb);
+  border-radius: var(--radius, 8px);
+  background: var(--color-accent, #2563eb);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.add-org-btn:hover {
+  opacity: 0.9;
+}
+
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg, 24px);
+}
+
+.org-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg, 24px);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--radius, 8px);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.org-card:hover {
+  border-color: var(--color-accent, #2563eb);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.org-card-link {
+  text-decoration: none;
+  color: var(--color-text, #1a1a1a);
+  padding-right: var(--space-lg, 24px);
+}
+
+.org-card-link h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs, 4px);
+}
+
+.org-card-link p {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #555);
+}
+
+.delete-btn {
+  position: absolute;
+  top: var(--space-sm, 8px);
+  right: var(--space-sm, 8px);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #555);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: var(--space-xs, 4px) var(--space-sm, 8px);
+  border-radius: var(--radius, 8px);
+  transition: color 0.15s, background 0.15s;
+}
+
+.delete-btn:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}

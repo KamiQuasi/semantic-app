@@ -10,14 +10,32 @@
       <label><span typeof="name"></span>
         <input type="text" data-prop="name" property="name"></label>
 
-      <label><span typeof="jobTitle"></span>
-        <input type="text" data-prop="jobTitle" property="jobTitle"></label>
+      <div class="i18n-field">
+        <span typeof="jobTitle"></span>
+        <div class="lang-tabs" role="tablist">
+          <button type="button" class="lang-tab active" data-lang="en" vocab="urn:ui:" typeof="langEn"></button>
+          <button type="button" class="lang-tab" data-lang="fr" vocab="urn:ui:" typeof="langFr"></button>
+          <button type="button" class="lang-tab" data-lang="es" vocab="urn:ui:" typeof="langEs"></button>
+        </div>
+        <input type="text" data-prop="jobTitle.en" property="jobTitle" data-lang="en">
+        <input type="text" data-prop="jobTitle.fr" property="jobTitle" data-lang="fr" hidden>
+        <input type="text" data-prop="jobTitle.es" property="jobTitle" data-lang="es" hidden>
+      </div>
 
       <label><span typeof="email"></span>
         <input type="email" data-prop="email" property="email"></label>
 
-      <label><span typeof="description"></span>
-        <textarea data-prop="description" property="description" rows="3"></textarea></label>
+      <div class="i18n-field">
+        <span typeof="description"></span>
+        <div class="lang-tabs" role="tablist">
+          <button type="button" class="lang-tab active" data-lang="en" vocab="urn:ui:" typeof="langEn"></button>
+          <button type="button" class="lang-tab" data-lang="fr" vocab="urn:ui:" typeof="langFr"></button>
+          <button type="button" class="lang-tab" data-lang="es" vocab="urn:ui:" typeof="langEs"></button>
+        </div>
+        <textarea data-prop="description.en" property="description" data-lang="en" rows="3"></textarea>
+        <textarea data-prop="description.fr" property="description" data-lang="fr" rows="3" hidden></textarea>
+        <textarea data-prop="description.es" property="description" data-lang="es" rows="3" hidden></textarea>
+      </div>
 
       <label>
         <input type="checkbox" data-prop="isActive" property="isActive">
@@ -28,6 +46,10 @@
 
       <label><span typeof="image"></span>
         <input type="url" data-prop="image" property="image"></label>
+
+      <label><span typeof="worksFor"></span>
+        <input type="text" data-prop="worksForId" list="orgs-datalist" autocomplete="off"></label>
+      <datalist id="orgs-datalist"></datalist>
 
       <fieldset property="address" resource="#address" typeof="PostalAddress">
         <legend typeof="address"></legend>
